@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { formatEther } from 'viem';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
 import { Side, MarketState } from '@/lib/types';
 import { Button } from './ui/Button';
@@ -15,6 +17,7 @@ interface ClaimPanelProps {
 
 export function ClaimPanel({ marketId, winningSide, marketState }: ClaimPanelProps) {
   const { address } = useAccount();
+  const queryClient = useQueryClient();
 
   // Read user's bet
   const { data: userBet } = useReadContract({
@@ -40,6 +43,14 @@ export function ClaimPanel({ marketId, winningSide, marketState }: ClaimPanelPro
 
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  // Invalidate queries after successful claim to refresh data
+  useEffect(() => {
+    if (isSuccess) {
+      // Invalidate all contract read queries to refresh user bet and market data
+      queryClient.invalidateQueries();
+    }
+  }, [isSuccess, queryClient]);
 
   const handleClaim = async () => {
     writeContract({

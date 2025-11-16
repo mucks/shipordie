@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -19,9 +20,21 @@ interface BetPanelProps {
 export function BetPanel({ marketId, yesPool, noPool, creatorStake, isOpen }: BetPanelProps) {
   const [yesAmount, setYesAmount] = useState('');
   const [noAmount, setNoAmount] = useState('');
+  const queryClient = useQueryClient();
 
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  // Invalidate queries after successful bet to refresh data
+  useEffect(() => {
+    if (isSuccess) {
+      // Invalidate all contract read queries to refresh market data
+      queryClient.invalidateQueries();
+      // Clear input fields after successful bet
+      setYesAmount('');
+      setNoAmount('');
+    }
+  }, [isSuccess, queryClient]);
 
   const handleBetYes = async () => {
     if (!yesAmount || parseFloat(yesAmount) <= 0) return;

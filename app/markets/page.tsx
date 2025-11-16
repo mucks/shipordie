@@ -1,11 +1,12 @@
 'use client';
 
-import { useReadContract } from 'wagmi';
+import { useReadContract, useReadContracts } from 'wagmi';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
 import { Market } from '@/lib/types';
 import { MarketCard } from '@/components/MarketCard';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { useMemo } from 'react';
 
 export default function MarketsPage() {
   // Read total market count
@@ -17,21 +18,32 @@ export default function MarketsPage() {
 
   const totalMarkets = Number(marketCount ?? BigInt(0));
 
-  // Read all markets
-  // For simplicity, we'll read markets one by one
-  // In production, consider using useReadContracts or implement pagination
-  const markets: { id: number; data: Market | undefined }[] = [];
-  
-  for (let i = 0; i < totalMarkets; i++) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data } = useReadContract({
+  // Create contracts array for batch reading
+  const contracts = useMemo(() => {
+    return Array.from({ length: totalMarkets }, (_, i) => ({
       address: MILESTONE_PREDICTION_ADDRESS,
       abi: MILESTONE_PREDICTION_ABI,
-      functionName: 'getMarket',
-      args: [BigInt(i)],
-    });
-    markets.push({ id: i, data: data as Market | undefined });
-  }
+      functionName: 'getMarket' as const,
+      args: [BigInt(i)] as const,
+    }));
+  }, [totalMarkets]);
+
+  // Batch read all markets
+  const { data: marketsData } = useReadContracts({
+    contracts,
+    query: {
+      enabled: totalMarkets > 0,
+    },
+  });
+
+  // Map results to market objects
+  const markets: { id: number; data: Market | undefined }[] = useMemo(() => {
+    if (!marketsData) return [];
+    return marketsData.map((result, i) => ({
+      id: i,
+      data: result.status === 'success' ? (result.result as Market) : undefined,
+    }));
+  }, [marketsData]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

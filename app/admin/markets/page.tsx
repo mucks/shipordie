@@ -1,15 +1,18 @@
 'use client';
 
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { formatEther } from 'viem';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
 import { Market, MarketState, MarketMetadata, Side } from '@/lib/types';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { useMemo, useEffect } from 'react';
 
 export default function AdminMarketsPage() {
   const { address } = useAccount();
+  const queryClient = useQueryClient();
 
   // Read oracle address
   const { data: oracleAddress } = useReadContract({
@@ -28,21 +31,43 @@ export default function AdminMarketsPage() {
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // Invalidate queries after successful lock/resolve to refresh data
+  useEffect(() => {
+    if (isSuccess) {
+      // Invalidate all contract read queries to refresh market data
+      queryClient.invalidateQueries();
+    }
+  }, [isSuccess, queryClient]);
+
   const totalMarkets = Number(marketCount ?? BigInt(0));
   const isOracle = address && oracleAddress && address.toLowerCase() === oracleAddress.toLowerCase();
 
-  // Read all markets
-  const markets: { id: number; data: Market | undefined }[] = [];
-  for (let i = 0; i < totalMarkets; i++) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data } = useReadContract({
+  // Create contracts array for batch reading
+  const contracts = useMemo(() => {
+    return Array.from({ length: totalMarkets }, (_, i) => ({
       address: MILESTONE_PREDICTION_ADDRESS,
       abi: MILESTONE_PREDICTION_ABI,
-      functionName: 'getMarket',
-      args: [BigInt(i)],
-    });
-    markets.push({ id: i, data: data as Market | undefined });
-  }
+      functionName: 'getMarket' as const,
+      args: [BigInt(i)] as const,
+    }));
+  }, [totalMarkets]);
+
+  // Batch read all markets
+  const { data: marketsData } = useReadContracts({
+    contracts,
+    query: {
+      enabled: totalMarkets > 0,
+    },
+  });
+
+  // Map results to market objects
+  const markets: { id: number; data: Market | undefined }[] = useMemo(() => {
+    if (!marketsData) return [];
+    return marketsData.map((result, i) => ({
+      id: i,
+      data: result.status === 'success' ? (result.result as Market) : undefined,
+    }));
+  }, [marketsData]);
 
   const handleLockMarket = (marketId: number) => {
     writeContract({

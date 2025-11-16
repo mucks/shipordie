@@ -4,6 +4,7 @@ import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseEther } from 'viem';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -12,6 +13,7 @@ import { Card, CardHeader, CardContent, CardTitle } from './ui/Card';
 
 export function CreateMarketForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -28,9 +30,11 @@ export function CreateMarketForm() {
 
   useEffect(() => {
     if (!isSuccess) return;
+    // Invalidate queries to refresh markets list
+    queryClient.invalidateQueries();
     const timeout = setTimeout(() => router.push('/markets'), 2000);
     return () => clearTimeout(timeout);
-  }, [isSuccess, router]);
+  }, [isSuccess, router, queryClient]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
