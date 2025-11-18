@@ -74,6 +74,11 @@ export default function MarketPage({ params }: PageProps) {
   const noPercentage = totalPool > BigInt(0) 
     ? Math.round((Number(market.noPool) / Number(totalPool)) * 100) 
     : 0;
+  
+  // Calculate implied probability (YES probability)
+  const impliedProbability = totalPool > BigInt(0)
+    ? Math.round((Number(market.yesPool) / Number(totalPool)) * 100)
+    : 50;
 
   const getStateInfo = () => {
     switch (market.state) {
@@ -94,8 +99,8 @@ export default function MarketPage({ params }: PageProps) {
   const stateInfo = getStateInfo();
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <Link href="/markets" className="text-blue-600 hover:text-blue-700 mb-6 inline-block">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-[#1a1a1a]">
+      <Link href="/markets" className="text-white hover:text-blue-400 mb-6 inline-block font-bold uppercase border-b-2 border-white hover:border-blue-400">
         ← Back to Markets
       </Link>
 
@@ -109,7 +114,7 @@ export default function MarketPage({ params }: PageProps) {
                 <div className="flex-1">
                   <CardTitle className="text-3xl mb-2">{metadata.title}</CardTitle>
                   {metadata.startupName && (
-                    <p className="text-gray-600 dark:text-gray-300">by {metadata.startupName}</p>
+                    <p className="text-white font-bold">by {metadata.startupName}</p>
                   )}
                 </div>
                 <Badge variant={stateInfo.variant as 'default' | 'success' | 'warning' | 'danger' | 'info'} className="text-sm px-3 py-1">
@@ -118,10 +123,10 @@ export default function MarketPage({ params }: PageProps) {
               </div>
               
               {market.state === MarketState.Resolved && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm font-medium text-blue-900">
+                <div className="p-4 bg-blue-500 border-4 border-black">
+                  <p className="text-sm font-black uppercase text-white">
                     Market Resolved: Winning side is{' '}
-                    <span className={market.winningSide === Side.Yes ? 'text-green-600' : 'text-red-600'}>
+                    <span className={market.winningSide === Side.Yes ? 'text-green-400' : 'text-red-400'}>
                       {market.winningSide === Side.Yes ? 'YES' : 'NO'}
                     </span>
                   </p>
@@ -131,20 +136,34 @@ export default function MarketPage({ params }: PageProps) {
 
             <CardContent className="space-y-6">
               <div>
-                <h3 className="font-semibold mb-2">Description</h3>
-                <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">{metadata.description}</p>
+                <h3 className="font-black uppercase mb-3 text-white">Description</h3>
+                <p className="text-white whitespace-pre-wrap font-medium">{metadata.description}</p>
               </div>
 
-              <div className="border-t border-gray-200 dark:border-neutral-800 pt-6">
-                <h3 className="font-semibold mb-4">Pool Distribution</h3>
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-green-600 font-medium">YES {yesPercentage}%</span>
-                    <span className="text-red-600 font-medium">NO {noPercentage}%</span>
+              <div className="border-t-4 border-black pt-6">
+                <h3 className="font-black uppercase mb-4 text-white">Pool Distribution</h3>
+                
+                {/* Implied Probability */}
+                <div className="bg-blue-500 border-4 border-black p-4 mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-black uppercase text-white">Implied Probability (YES)</span>
+                    <span className="text-4xl font-black text-white">
+                      {impliedProbability}%
+                    </span>
                   </div>
-                  <div className="flex h-4 bg-gray-200 dark:bg-neutral-800 rounded-full overflow-hidden mb-4">
+                  <p className="text-xs text-white mt-2 font-bold">
+                    Market price indicates {impliedProbability}% chance of YES outcome
+                  </p>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-sm mb-2 font-bold">
+                    <span className="text-green-600">YES {yesPercentage}%</span>
+                    <span className="text-red-600">NO {noPercentage}%</span>
+                  </div>
+                  <div className="flex h-6 bg-gray-200 border-2 border-black overflow-hidden mb-4">
                     <div 
-                      className="bg-green-500" 
+                      className="bg-green-500 border-r-2 border-black" 
                       style={{ width: `${yesPercentage}%` }}
                     />
                     <div 
@@ -153,15 +172,15 @@ export default function MarketPage({ params }: PageProps) {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">YES Pool</p>
-                      <p className="text-xl font-bold text-green-600">
+                    <div className="border-2 border-black p-3 bg-[#1a1a1a]">
+                      <p className="text-xs font-black uppercase text-white mb-1">YES Pool</p>
+                      <p className="text-xl font-black text-green-400">
                         {formatEther(market.yesPool)} BNB
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">NO Pool</p>
-                      <p className="text-xl font-bold text-red-600">
+                    <div className="border-2 border-black p-3 bg-[#1a1a1a]">
+                      <p className="text-xs font-black uppercase text-white mb-1">NO Pool</p>
+                      <p className="text-xl font-black text-red-400">
                         {formatEther(market.noPool)} BNB
                       </p>
                     </div>
@@ -169,24 +188,24 @@ export default function MarketPage({ params }: PageProps) {
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 dark:border-neutral-800 pt-6 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Total Pool</p>
-                  <p className="text-2xl font-bold">{formatEther(totalPool)} BNB</p>
+              <div className="border-t-4 border-black pt-6 grid grid-cols-2 gap-4">
+                <div className="border-2 border-black p-3 bg-[#1a1a1a]">
+                  <p className="text-xs font-black uppercase text-white mb-1">Total Pool</p>
+                  <p className="text-2xl font-black text-white">{formatEther(totalPool)} BNB</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Creator Stake</p>
-                  <p className="text-2xl font-bold">{formatEther(market.creatorStake)} BNB</p>
+                <div className="border-2 border-black p-3 bg-[#1a1a1a]">
+                  <p className="text-xs font-black uppercase text-white mb-1">Creator Stake</p>
+                  <p className="text-2xl font-black text-white">{formatEther(market.creatorStake)} BNB</p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Deadline</p>
-                  <p className="text-lg font-medium">
+                <div className="border-2 border-black p-3 bg-[#1a1a1a]">
+                  <p className="text-xs font-black uppercase text-white mb-1">Deadline</p>
+                  <p className="text-lg font-bold text-white">
                     {deadline.toLocaleString()}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">Creator</p>
-                  <p className="text-sm font-mono">
+                <div className="border-2 border-black p-3 bg-[#1a1a1a]">
+                  <p className="text-xs font-black uppercase text-white mb-1">Creator</p>
+                  <p className="text-sm font-mono font-bold text-white">
                     {market.creator.slice(0, 6)}...{market.creator.slice(-4)}
                   </p>
                 </div>
@@ -205,6 +224,7 @@ export default function MarketPage({ params }: PageProps) {
             noPool={market.noPool}
             creatorStake={market.creatorStake}
             isOpen={isOpen}
+            creator={market.creator}
           />
         </div>
       </div>

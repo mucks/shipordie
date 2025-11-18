@@ -11,6 +11,16 @@ contract MilestonePrediction {
     enum Side { None, Yes, No }
     enum MarketState { Open, Locked, Resolved }
     
+    struct Startup {
+        address creator;
+        string name;
+        string description;
+        string category;
+        string stage;
+        string website;
+        uint256 createdAt;
+    }
+    
     struct Market {
         address creator;
         uint256 deadline;
@@ -20,6 +30,7 @@ contract MilestonePrediction {
         MarketState state;
         Side winningSide;
         string metadataURI; // IPFS or data URI with title, description
+        uint256 startupId; // 0 means no startup
     }
     
     struct Bet {
@@ -30,18 +41,28 @@ contract MilestonePrediction {
     
     // State
     uint256 public marketCount;
+    uint256 public startupCount;
     mapping(uint256 => Market) public markets;
+    mapping(uint256 => Startup) public startups;
     mapping(uint256 => mapping(address => Bet)) public bets;
     
     address public oracle;
     
     // Events
+    event StartupCreated(
+        uint256 indexed startupId,
+        address indexed creator,
+        string name,
+        string category
+    );
+    
     event MarketCreated(
         uint256 indexed marketId,
         address indexed creator,
         uint256 deadline,
         uint256 creatorStake,
-        string metadataURI
+        string metadataURI,
+        uint256 startupId
     );
     
     event BetPlaced(
@@ -80,16 +101,57 @@ contract MilestonePrediction {
     }
     
     /**
+     * @notice Create a new startup
+     * @param name Startup name
+     * @param description Startup description
+     * @param category Startup category
+     * @param stage Startup stage
+     * @param website Startup website (optional)
+     */
+    function createStartup(
+        string calldata name,
+        string calldata description,
+        string calldata category,
+        string calldata stage,
+        string calldata website
+    ) external returns (uint256) {
+        require(bytes(name).length > 0, "Name required");
+        require(bytes(description).length > 0, "Description required");
+        require(bytes(category).length > 0, "Category required");
+        
+        uint256 startupId = startupCount++;
+        
+        startups[startupId] = Startup({
+            creator: msg.sender,
+            name: name,
+            description: description,
+            category: category,
+            stage: stage,
+            website: website,
+            createdAt: block.timestamp
+        });
+        
+        emit StartupCreated(startupId, msg.sender, name, category);
+        
+        return startupId;
+    }
+    
+    /**
      * @notice Create a new milestone prediction market
      * @param deadline Unix timestamp when market locks
      * @param metadataURI IPFS or data URI containing market details
+     * @param startupId Startup ID (0 means no startup)
      */
     function createMarket(
         uint256 deadline,
-        string calldata metadataURI
+        string calldata metadataURI,
+        uint256 startupId
     ) external payable returns (uint256) {
         require(deadline > block.timestamp, "Deadline must be future");
         require(msg.value > 0, "Must stake BNB");
+        if (startupId > 0) {
+            require(startupId < startupCount, "Startup does not exist");
+        }
         
         uint256 marketId = marketCount++;
         
@@ -101,10 +163,11 @@ contract MilestonePrediction {
             noPool: 0,
             state: MarketState.Open,
             winningSide: Side.None,
-            metadataURI: metadataURI
+            metadataURI: metadataURI,
+            startupId: startupId
         });
         
-        emit MarketCreated(marketId, msg.sender, deadline, msg.value, metadataURI);
+        emit MarketCreated(marketId, msg.sender, deadline, msg.value, metadataURI, startupId);
         
         return marketId;
     }
@@ -263,6 +326,18 @@ contract MilestonePrediction {
     }
     
     /**
+     * @notice Get startup details
+     */
+    function getStartup(uint256 startupId) 
+        external 
+        view 
+        returns (Startup memory) 
+    {
+        require(startupId < startupCount, "Startup does not exist");
+        return startups[startupId];
+    }
+    
+    /**
      * @notice Update oracle address
      */
     function updateOracle(address newOracle) external onlyOracle {
@@ -270,5 +345,7 @@ contract MilestonePrediction {
         oracle = newOracle;
     }
 }
+
+
 
 

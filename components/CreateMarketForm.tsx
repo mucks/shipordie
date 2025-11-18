@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseEther } from 'viem';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useReadContract, useReadContracts } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
+import { Startup } from '@/lib/types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
+import { DatePicker } from './ui/DatePicker';
 import { Card, CardHeader, CardContent, CardTitle } from './ui/Card';
 
 export function CreateMarketForm() {
@@ -17,11 +19,47 @@ export function CreateMarketForm() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    startupName: '',
+    startupId: '',
     deadline: '',
     stake: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Read total startup count
+  const { data: startupCount } = useReadContract({
+    address: MILESTONE_PREDICTION_ADDRESS,
+    abi: MILESTONE_PREDICTION_ABI,
+    functionName: 'startupCount',
+  });
+
+  const totalStartups = Number(startupCount ?? BigInt(0));
+
+  // Create contracts array for batch reading startups
+  const startupContracts = useMemo(() => {
+    return Array.from({ length: totalStartups }, (_, i) => ({
+      address: MILESTONE_PREDICTION_ADDRESS,
+      abi: MILESTONE_PREDICTION_ABI,
+      functionName: 'getStartup' as const,
+      args: [BigInt(i)] as const,
+    }));
+  }, [totalStartups]);
+
+  // Batch read all startups
+  const { data: startupsData } = useReadContracts({
+    contracts: startupContracts,
+    query: {
+      enabled: totalStartups > 0,
+    },
+  });
+
+  // Map results to startup objects
+  const startups: { id: number; data: Startup | undefined }[] = useMemo(() => {
+    if (!startupsData) return [];
+    return startupsData.map((result, i) => ({
+      id: i,
+      data: result.status === 'success' ? (result.result as Startup) : undefined,
+    }));
+  }, [startupsData]);
 
   const { writeContract, data: hash, isPending } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ 
@@ -72,16 +110,16 @@ export function CreateMarketForm() {
     const metadata = {
       title: formData.title,
       description: formData.description,
-      startupName: formData.startupName || undefined,
     };
 
     const deadlineTimestamp = Math.floor(new Date(formData.deadline).getTime() / 1000);
+    const startupId = formData.startupId ? BigInt(formData.startupId) : BigInt(0);
 
     writeContract({
       address: MILESTONE_PREDICTION_ADDRESS,
       abi: MILESTONE_PREDICTION_ABI,
       functionName: 'createMarket',
-      args: [BigInt(deadlineTimestamp), JSON.stringify(metadata)],
+      args: [BigInt(deadlineTimestamp), JSON.stringify(metadata), startupId],
       value: parseEther(formData.stake),
     });
   };
@@ -90,7 +128,7 @@ export function CreateMarketForm() {
     <Card>
       <CardHeader>
         <CardTitle>Create Milestone Market</CardTitle>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-sm text-white mt-2 font-medium">
           Create a prediction market for your startup milestone. Stake BNB to show your commitment.
         </p>
       </CardHeader>
@@ -115,20 +153,39 @@ export function CreateMarketForm() {
             required
           />
 
-          <Input
-            label="Startup Name (Optional)"
-            placeholder="Acme Inc."
-            value={formData.startupName}
-            onChange={(e) => setFormData({ ...formData, startupName: e.target.value })}
-          />
+          <div>
+            <label className="block text-sm font-bold mb-2 text-white">
+              Startup (Optional)
+            </label>
+            <select
+              value={formData.startupId}
+              onChange={(e) => setFormData({ ...formData, startupId: e.target.value })}
+              className="w-full px-4 py-2 border-4 border-black bg-background text-foreground font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">None - Create market without startup</option>
+              {startups.map((startup) => {
+                if (!startup.data) return null;
+                return (
+                  <option key={startup.id} value={startup.id}>
+                    {startup.data.name} ({startup.data.category})
+                  </option>
+                );
+              })}
+            </select>
+            {totalStartups === 0 && (
+              <p className="text-sm text-muted-foreground mt-2 font-medium">
+                No startups created yet. <a href="/startups/create" className="text-primary underline font-bold">Create one here</a>.
+              </p>
+            )}
+          </div>
 
-          <Input
+          <DatePicker
             label="Deadline"
-            type="datetime-local"
             value={formData.deadline}
-            onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+            onChange={(value) => setFormData({ ...formData, deadline: value })}
             error={errors.deadline}
             required
+            min={new Date().toISOString().slice(0, 16)}
           />
 
           <Input
@@ -143,8 +200,8 @@ export function CreateMarketForm() {
             required
           />
 
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
+          <div className="p-4 bg-blue-500 border-4 border-black">
+            <p className="text-sm text-white font-bold">
               💡 <strong>Tip:</strong> Your stake shows commitment and is added to the prize pool. 
               Higher stakes attract more participants.
             </p>
@@ -160,8 +217,8 @@ export function CreateMarketForm() {
           </Button>
 
           {isSuccess && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
+            <div className="p-4 bg-green-500 border-4 border-black">
+              <p className="text-sm text-white font-black uppercase">
                 ✓ Market created successfully! Redirecting...
               </p>
             </div>

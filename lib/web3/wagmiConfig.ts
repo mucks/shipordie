@@ -11,7 +11,7 @@ export function getWagmiConfig() {
     connectors: [
       injected(),
       metaMask(),
-      coinbaseWallet({ appName: 'ProofMarket' }),
+      coinbaseWallet({ appName: 'Ship or Die' }),
     ],
     transports: {
       [bscTestnet.id]: http(),

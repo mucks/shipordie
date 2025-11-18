@@ -16,7 +16,7 @@ export function Providers({ children }: { children: ReactNode }) {
       projectId: projectId!, // non-null: appkitConfig throws if undefined
       networks: networks as any, // satisfy AppKit typing; runtime networks already valid
       metadata: {
-        name: 'ProofMarket',
+        name: 'Ship or Die',
         description: 'Prediction Markets for Startup Milestones',
         url: 'http://localhost:3000',
         icons: ['https://avatars.githubusercontent.com/u/37784886?s=200&v=4'],

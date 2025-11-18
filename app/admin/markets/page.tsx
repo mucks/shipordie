@@ -9,6 +9,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useMemo, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function AdminMarketsPage() {
   const { address } = useAccount();
@@ -60,14 +61,23 @@ export default function AdminMarketsPage() {
     },
   });
 
-  // Map results to market objects
-  const markets: { id: number; data: Market | undefined }[] = useMemo(() => {
+  // Map results to market objects and filter by creator
+  const allMarkets: { id: number; data: Market | undefined }[] = useMemo(() => {
     if (!marketsData) return [];
     return marketsData.map((result, i) => ({
       id: i,
       data: result.status === 'success' ? (result.result as Market) : undefined,
     }));
   }, [marketsData]);
+
+  // Filter markets created by the connected user
+  const userMarkets = useMemo(() => {
+    if (!address || !allMarkets) return [];
+    return allMarkets.filter((market) => {
+      if (!market.data) return false;
+      return market.data.creator.toLowerCase() === address.toLowerCase();
+    });
+  }, [allMarkets, address]);
 
   const handleLockMarket = (marketId: number) => {
     writeContract({
@@ -89,47 +99,64 @@ export default function AdminMarketsPage() {
 
   if (!address) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="container mx-auto px-6 py-16">
         <div className="text-center py-20">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Connect Wallet</h2>
-          <p className="text-gray-600 dark:text-gray-300">Please connect your wallet to access the admin panel.</p>
+          <h2 className="text-4xl font-black mb-4">Connect Wallet</h2>
+          <p className="text-muted-foreground font-medium">Please connect your wallet to manage your markets.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">Admin Panel</h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">Manage market resolution and locking</p>
+    <div className="container mx-auto px-6 py-16">
+      <div className="mb-12">
+        <h1 className="text-5xl md:text-6xl font-black mb-6">My Markets</h1>
+        <p className="text-xl text-muted-foreground font-medium">
+          Manage the markets you've created
+        </p>
       </div>
 
-      {/* Oracle Info */}
-      <Card className="mb-8">
-        <CardContent className="py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Oracle Address</p>
-              <p className="font-mono text-sm">{oracleAddress as string}</p>
+      {/* Info Card */}
+      <Card className="bg-card border-4 border-black brutalist-shadow-md p-6 mb-8">
+        <CardContent className="p-0">
+          <div className="flex items-start gap-4">
+            <div className="text-2xl">ℹ️</div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold mb-2">About Market Management</h3>
+              <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                Once a market is created on-chain, it cannot be deleted. Markets are permanent and immutable. 
+                You can view your markets and their status below. If a market has no bets yet and hasn't passed its deadline, 
+                you may be able to cancel it through a contract upgrade in the future.
+              </p>
             </div>
-            {isOracle ? (
-              <Badge variant="success">You are the Oracle</Badge>
-            ) : (
-              <Badge variant="warning">Not Oracle</Badge>
-            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Markets List */}
-      <div className="space-y-4">
-        {totalMarkets === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600 dark:text-gray-300">No markets to manage yet.</p>
-          </div>
+      <div className="space-y-6">
+        {userMarkets.length === 0 ? (
+          <Card className="bg-card border-4 border-black brutalist-shadow-md p-12 text-center">
+            <div className="text-6xl mb-6">📊</div>
+            <h3 className="text-2xl font-black mb-4">No Markets Created Yet</h3>
+            <p className="text-muted-foreground font-medium mb-6">
+              You haven't created any markets yet. Create your first market to get started!
+            </p>
+            <Link href="/markets/create">
+              <Button className="border-4 border-black brutalist-shadow font-bold uppercase">
+                Create Your First Market
+              </Button>
+            </Link>
+          </Card>
         ) : (
-          markets.map((market) => {
+          <>
+            <div className="mb-4">
+              <p className="text-muted-foreground font-medium">
+                You have created <span className="font-bold text-foreground">{userMarkets.length}</span> {userMarkets.length === 1 ? 'market' : 'markets'}
+              </p>
+            </div>
+            {userMarkets.map((market) => {
             if (!market.data) return null;
 
             const m = market.data;
@@ -145,70 +172,92 @@ export default function AdminMarketsPage() {
             const canLock = m.state === MarketState.Open && isExpired;
             const canResolve = m.state === MarketState.Locked && isOracle;
 
+            const hasBets = m.yesPool > BigInt(0) || m.noPool > BigInt(0);
+            const canCancel = m.state === MarketState.Open && !hasBets && !isExpired;
+
             return (
-              <Card key={market.id}>
+              <Card key={market.id} className="bg-card border-4 border-black brutalist-shadow-md">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <CardTitle className="text-xl">
-                        #{market.id} - {metadata.title}
-                      </CardTitle>
+                      <div className="flex items-center gap-3 mb-2">
+                        <CardTitle className="text-2xl font-bold">
+                          {metadata.title}
+                        </CardTitle>
+                        <Badge variant={
+                          m.state === MarketState.Open ? 'success' :
+                          m.state === MarketState.Locked ? 'warning' : 'info'
+                        }>
+                          {MarketState[m.state]}
+                        </Badge>
+                      </div>
                       {metadata.startupName && (
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">by {metadata.startupName}</p>
+                        <p className="text-sm text-muted-foreground font-medium">by {metadata.startupName}</p>
+                      )}
+                      {metadata.description && (
+                        <p className="text-sm text-muted-foreground font-medium mt-2 line-clamp-2">
+                          {metadata.description}
+                        </p>
                       )}
                     </div>
-                    <Badge variant={
-                      m.state === MarketState.Open ? 'success' :
-                      m.state === MarketState.Locked ? 'warning' : 'info'
-                    }>
-                      {MarketState[m.state]}
-                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">YES Pool</p>
-                      <p className="font-semibold text-green-600">{formatEther(m.yesPool)} BNB</p>
+                  <div className="grid md:grid-cols-4 gap-4 mb-6">
+                    <div className="border-2 border-black p-3 bg-muted/30">
+                      <p className="text-xs font-bold uppercase text-muted-foreground mb-1">YES Pool</p>
+                      <p className="font-black text-accent text-lg">{formatEther(m.yesPool)} BNB</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">NO Pool</p>
-                      <p className="font-semibold text-red-600">{formatEther(m.noPool)} BNB</p>
+                    <div className="border-2 border-black p-3 bg-muted/30">
+                      <p className="text-xs font-bold uppercase text-muted-foreground mb-1">NO Pool</p>
+                      <p className="font-black text-destructive text-lg">{formatEther(m.noPool)} BNB</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">Deadline</p>
-                      <p className="text-sm">{deadline.toLocaleDateString()}</p>
+                    <div className="border-2 border-black p-3 bg-muted/30">
+                      <p className="text-xs font-bold uppercase text-muted-foreground mb-1">Deadline</p>
+                      <p className="font-bold text-sm">{deadline.toLocaleDateString()}</p>
                       {isExpired && m.state === MarketState.Open && (
-                        <Badge variant="danger" className="mt-1">Expired</Badge>
+                        <Badge variant="danger" className="mt-1 text-xs">Expired</Badge>
                       )}
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-600 dark:text-gray-300">Total Pool</p>
-                      <p className="font-semibold">
+                    <div className="border-2 border-black p-3 bg-muted/30">
+                      <p className="text-xs font-bold uppercase text-muted-foreground mb-1">Total Pool</p>
+                      <p className="font-black text-lg">
                         {formatEther(m.yesPool + m.noPool + m.creatorStake)} BNB
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Link href={`/markets/${market.id}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-4 border-black brutalist-shadow font-bold uppercase"
+                      >
+                        View Market
+                      </Button>
+                    </Link>
+
                     {canLock && (
                       <Button
                         onClick={() => handleLockMarket(market.id)}
                         disabled={isPending || isConfirming}
                         variant="secondary"
                         size="sm"
+                        className="border-4 border-black brutalist-shadow font-bold uppercase"
                       >
                         {isPending || isConfirming ? 'Locking...' : 'Lock Market'}
                       </Button>
                     )}
 
-                    {canResolve && (
+                    {canResolve && isOracle && (
                       <>
                         <Button
                           onClick={() => handleResolveMarket(market.id, Side.Yes)}
                           disabled={isPending || isConfirming}
                           variant="primary"
                           size="sm"
+                          className="border-4 border-black brutalist-shadow font-bold uppercase"
                         >
                           Resolve YES
                         </Button>
@@ -217,6 +266,7 @@ export default function AdminMarketsPage() {
                           disabled={isPending || isConfirming}
                           variant="danger"
                           size="sm"
+                          className="border-4 border-black brutalist-shadow font-bold uppercase"
                         >
                           Resolve NO
                         </Button>
@@ -224,29 +274,38 @@ export default function AdminMarketsPage() {
                     )}
 
                     {m.state === MarketState.Resolved && (
-                      <Badge variant="info">
+                      <Badge variant="info" className="border-3 border-black brutalist-shadow-sm">
                         Resolved: {m.winningSide === Side.Yes ? 'YES' : 'NO'}
                       </Badge>
                     )}
 
-                    {!canLock && !canResolve && m.state === MarketState.Open && (
-                      <p className="text-sm text-gray-600">Waiting for deadline...</p>
+                    {canCancel && (
+                      <div className="ml-auto">
+                        <Badge variant="warning" className="border-3 border-black brutalist-shadow-sm">
+                          ⚠️ Cannot Delete: Markets are permanent once created
+                        </Badge>
+                      </div>
+                    )}
+
+                    {!canLock && !canResolve && m.state === MarketState.Open && !isExpired && (
+                      <p className="text-sm text-muted-foreground font-medium">Active - Waiting for deadline...</p>
                     )}
 
                     {m.state === MarketState.Locked && !isOracle && (
-                      <p className="text-sm text-gray-600">Waiting for oracle resolution...</p>
+                      <p className="text-sm text-muted-foreground font-medium">Locked - Waiting for oracle resolution...</p>
                     )}
                   </div>
                 </CardContent>
               </Card>
             );
-          })
+            })}
+          </>
         )}
       </div>
 
       {isSuccess && (
-        <div className="fixed bottom-4 right-4 p-4 bg-green-50 border border-green-200 rounded-lg shadow-lg">
-          <p className="text-sm text-green-800">
+        <div className="fixed bottom-4 right-4 p-4 bg-accent border-4 border-black brutalist-shadow-md">
+          <p className="text-sm font-bold text-black">
             ✓ Transaction successful!
           </p>
         </div>

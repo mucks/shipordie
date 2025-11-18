@@ -44,6 +44,37 @@ export const MILESTONE_PREDICTION_ABI = [
       {
         "indexed": true,
         "internalType": "uint256",
+        "name": "startupId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "category",
+        "type": "string"
+      }
+    ],
+    "name": "StartupCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
         "name": "marketId",
         "type": "uint256"
       },
@@ -70,6 +101,12 @@ export const MILESTONE_PREDICTION_ABI = [
         "internalType": "string",
         "name": "metadataURI",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "startupId",
+        "type": "uint256"
       }
     ],
     "name": "MarketCreated",
@@ -237,6 +274,45 @@ export const MILESTONE_PREDICTION_ABI = [
   {
     "inputs": [
       {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "stage",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "website",
+        "type": "string"
+      }
+    ],
+    "name": "createStartup",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "deadline",
         "type": "uint256"
@@ -245,6 +321,11 @@ export const MILESTONE_PREDICTION_ABI = [
         "internalType": "string",
         "name": "metadataURI",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startupId",
+        "type": "uint256"
       }
     ],
     "name": "createMarket",
@@ -309,6 +390,11 @@ export const MILESTONE_PREDICTION_ABI = [
             "internalType": "string",
             "name": "metadataURI",
             "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startupId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct MilestonePrediction.Market",
@@ -374,12 +460,130 @@ export const MILESTONE_PREDICTION_ABI = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "startupId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getStartup",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "stage",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "website",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "createdAt",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct MilestonePrediction.Startup",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "marketCount",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "startupCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "startups",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "stage",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "website",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "createdAt",
         "type": "uint256"
       }
     ],
@@ -435,6 +639,11 @@ export const MILESTONE_PREDICTION_ABI = [
         "internalType": "string",
         "name": "metadataURI",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "startupId",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -485,5 +694,7 @@ export const MILESTONE_PREDICTION_ABI = [
     "type": "function"
   }
 ] as const;
+
+
 
 
