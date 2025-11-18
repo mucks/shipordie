@@ -9,7 +9,7 @@ export default function Hero() {
     <section className="container mx-auto px-6 py-24 glitch-texture">
       <div className="max-w-4xl mx-auto text-center space-y-8">
         {/* PRO Mini Badge */}
-        <Link href="/pro-waitlist" className="inline-block" data-testid="link-hero-pro">
+        <Link href="/waitlist" className="inline-block" data-testid="link-hero-pro">
           <Badge className="border-3 border-black brutalist-shadow-sm font-bold uppercase text-xs bg-gradient-to-r from-[#3772FF] to-[#8B5CF6] text-white hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all">
             ⭐ PRO Mode (Beta) — Request Access
           </Badge>

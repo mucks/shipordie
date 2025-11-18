@@ -15,7 +15,7 @@ export default function Footer() {
                 ⭐ PRO Coming Soon
               </Badge>
               <span className="text-sm font-bold text-muted-foreground">•</span>
-              <Link href="/pro-waitlist" className="text-sm font-bold text-foreground hover:text-primary transition-colors" data-testid="link-pro-waitlist">
+              <Link href="/waitlist" className="text-sm font-bold text-foreground hover:text-primary transition-colors" data-testid="link-pro-waitlist">
                 Join Waitlist →
               </Link>
             </div>
