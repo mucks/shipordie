@@ -9,7 +9,6 @@ import { Market, MarketMetadata, Startup } from '@/lib/types';
 import { MarketCard } from '@/components/MarketCard';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { getFeaturedStartups, getFeaturedMarkets } from '@/lib/mockData';
 import { formatEther } from 'viem';
 
 function getCategoryColor(category: string): string {
@@ -48,18 +47,14 @@ export default function StartupProfilePage() {
   const totalStartups = Number(startupCount ?? BigInt(0));
   const totalMarkets = Number(marketCount ?? BigInt(0));
 
-  // Get featured startups and markets
-  const featuredStartups = useMemo(() => getFeaturedStartups(), []);
-  const featuredMarkets = useMemo(() => getFeaturedMarkets(), []);
-
-  // Read on-chain startup if ID < 1000
+  // Read on-chain startup
   const { data: onChainStartup } = useReadContract({
     address: MILESTONE_PREDICTION_ADDRESS,
     abi: MILESTONE_PREDICTION_ABI,
     functionName: 'getStartup',
-    args: startupId !== null && startupId < 1000 ? [BigInt(startupId)] : undefined,
+    args: startupId !== null ? [BigInt(startupId)] : undefined,
     query: {
-      enabled: startupId !== null && startupId < 1000,
+      enabled: startupId !== null,
     },
   });
 
@@ -80,56 +75,38 @@ export default function StartupProfilePage() {
     },
   });
 
-  // Get startup data (mock or on-chain)
+  // Get startup data (on-chain only)
   const startup: Startup | null = useMemo(() => {
     if (startupId === null) return null;
-    
-    if (startupId >= 1000) {
-      // Mock startup
-      const mockStartup = featuredStartups.find((s) => s.id === startupId);
-      return mockStartup?.startup || null;
-    } else {
-      // On-chain startup
-      return onChainStartup as Startup | null;
-    }
-  }, [startupId, featuredStartups, onChainStartup]);
+    return onChainStartup as Startup | null;
+  }, [startupId, onChainStartup]);
 
-  // Get markets for this startup
+  // Get markets for this startup (on-chain only)
   const markets = useMemo(() => {
     if (startupId === null || !startup) return [];
 
     const marketList: Array<{ id: number; market: Market; metadata: MarketMetadata }> = [];
 
-    if (startupId >= 1000) {
-      // Mock startup - get markets from featured markets
-      featuredMarkets.forEach(({ id, market, metadata }) => {
-        if (metadata.startupName === startup.name) {
-          marketList.push({ id, market, metadata });
+    if (marketsData) {
+      marketsData.forEach((result, i) => {
+        if (result.status === 'success') {
+          const market = result.result as Market;
+          const marketStartupId = Number(market.startupId);
+          if (marketStartupId === startupId) {
+            let metadata: MarketMetadata = { title: 'Untitled', description: '' };
+            try {
+              metadata = JSON.parse(market.metadataURI);
+            } catch {
+              metadata.title = market.metadataURI;
+            }
+            marketList.push({ id: i, market, metadata });
+          }
         }
       });
-    } else {
-      // On-chain startup - get markets from on-chain data
-      if (marketsData) {
-        marketsData.forEach((result, i) => {
-          if (result.status === 'success') {
-            const market = result.result as Market;
-            const marketStartupId = Number(market.startupId);
-            if (marketStartupId === startupId) {
-              let metadata: MarketMetadata = { title: 'Untitled', description: '' };
-              try {
-                metadata = JSON.parse(market.metadataURI);
-              } catch {
-                metadata.title = market.metadataURI;
-              }
-              marketList.push({ id: i, market, metadata });
-            }
-          }
-        });
-      }
     }
 
     return marketList;
-  }, [startupId, startup, featuredMarkets, marketsData]);
+  }, [startupId, startup, marketsData]);
 
   // Calculate stats
   const stats = useMemo(() => {

@@ -8,7 +8,6 @@ import { MarketCard } from '@/components/MarketCard';
 import { MarketFilters, FilterType, SortType } from '@/components/MarketFilters';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { getFeaturedMarkets } from '@/lib/mockData';
 
 interface MarketWithId {
   id: number;
@@ -68,9 +67,6 @@ export default function MarketsPage() {
     },
   });
 
-  // Get featured markets (mock data)
-  const featuredMarkets = useMemo(() => getFeaturedMarkets(), []);
-
   // Map on-chain markets to MarketWithId format
   const onChainMarkets: MarketWithId[] = useMemo(() => {
     if (!marketsData) return [];
@@ -101,10 +97,10 @@ export default function MarketsPage() {
       .filter((m): m is MarketWithId => m !== null);
   }, [marketsData]);
 
-  // Combine featured (mock) and on-chain markets
+  // Use only on-chain markets
   const allMarkets = useMemo(() => {
-    return [...featuredMarkets, ...onChainMarkets];
-  }, [featuredMarkets, onChainMarkets]);
+    return onChainMarkets;
+  }, [onChainMarkets]);
 
   // Filter and sort markets
   const filteredAndSortedMarkets = useMemo(() => {
@@ -196,11 +192,6 @@ export default function MarketsPage() {
           <h1 className="text-5xl font-black uppercase tracking-tight text-white mb-2">All Markets</h1>
           <p className="text-white font-bold text-lg">
             {totalDisplayed} {totalDisplayed === 1 ? 'market' : 'markets'} available
-            {featuredMarkets.length > 0 && (
-              <span className="ml-2 text-sm bg-blue-500 px-2 py-1 border-2 border-black text-white">
-                ({featuredMarkets.length} featured)
-              </span>
-            )}
           </p>
         </div>
         <Link href="/markets/create">

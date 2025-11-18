@@ -147,7 +147,7 @@ export function WaitlistForm() {
 
           {/* Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
-            <Card>
+            <Card className="p-6">
               <TrendingUp className="h-10 w-10 text-blue-500 mb-4" />
               <h3 className="text-xl font-black mb-2">Advanced Analytics</h3>
               <p className="text-sm text-gray-300 font-medium">
@@ -155,7 +155,7 @@ export function WaitlistForm() {
               </p>
             </Card>
 
-            <Card>
+            <Card className="p-6">
               <Shield className="h-10 w-10 text-blue-500 mb-4" />
               <h3 className="text-xl font-black mb-2">Verified Markets</h3>
               <p className="text-sm text-gray-300 font-medium">
@@ -163,7 +163,7 @@ export function WaitlistForm() {
               </p>
             </Card>
 
-            <Card>
+            <Card className="p-6">
               <Target className="h-10 w-10 text-blue-500 mb-4" />
               <h3 className="text-xl font-black mb-2">Pro Execution Tools</h3>
               <p className="text-sm text-gray-300 font-medium">
@@ -301,8 +301,8 @@ export function WaitlistForm() {
                             control={form.control}
                             name="features"
                             render={({ field }) => (
-                              <FormItem className="flex items-center space-x-2">
-                                <FormControl>
+                              <FormItem className="flex items-start space-x-2">
+                                <FormControl className="mt-0.5">
                                   <Checkbox
                                     checked={field.value?.includes(feature.id)}
                                     onCheckedChange={(checked) => {
@@ -314,7 +314,7 @@ export function WaitlistForm() {
                                     className="border-2 border-black"
                                   />
                                 </FormControl>
-                                <FormLabel className="font-medium cursor-pointer !normal-case !font-normal text-white text-sm">
+                                <FormLabel className="font-medium cursor-pointer !normal-case !font-normal text-white text-sm leading-tight">
                                   {feature.label}
                                 </FormLabel>
                               </FormItem>

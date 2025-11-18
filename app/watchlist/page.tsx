@@ -8,7 +8,6 @@ import { MarketCard } from '@/components/MarketCard';
 import { useReadContract, useReadContracts } from 'wagmi';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
 import { Market, MarketMetadata } from '@/lib/types';
-import { getFeaturedMarkets } from '@/lib/mockData';
 import { useMemo } from 'react';
 
 interface MarketWithId {
@@ -54,8 +53,6 @@ export default function Watchlist() {
     },
   });
 
-  const featuredMarkets = useMemo(() => getFeaturedMarkets(), []);
-
   const allMarkets: MarketWithId[] = useMemo(() => {
     const onChainMarkets: MarketWithId[] = [];
     
@@ -87,13 +84,8 @@ export default function Watchlist() {
       });
     }
 
-    // Also include featured markets that are watched
-    const watchedFeatured = featuredMarkets.filter((m) => 
-      watchedMarketIds.includes(m.id.toString())
-    );
-
-    return [...watchedFeatured, ...onChainMarkets];
-  }, [marketsData, watchedMarketIds, featuredMarkets]);
+    return onChainMarkets;
+  }, [marketsData, watchedMarketIds]);
 
   const hasWatchedMarkets = allMarkets.length > 0;
 

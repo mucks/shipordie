@@ -10,7 +10,6 @@ import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/we
 import { Market, MarketMetadata, Startup } from '@/lib/types';
 import { formatCompactNumber } from '@/lib/formatters';
 import { formatEther } from 'viem';
-import { getFeaturedStartups, getFeaturedMarkets } from '@/lib/mockData';
 
 interface StartupData {
   id: number;
@@ -113,37 +112,14 @@ export default function Startups() {
     }));
   }, [startupsData]);
 
-  // Get featured startups (mock data)
-  const featuredStartups = useMemo(() => getFeaturedStartups(), []);
-
-  // Combine featured (mock) and on-chain startups
+  // Use only on-chain startups
   const startups: Array<{ id: number; data: Startup | undefined }> = useMemo(() => {
-    const featured = featuredStartups.map(({ id, startup }) => ({
-      id,
-      data: startup,
-    }));
-    return [...featured, ...onChainStartups];
-  }, [featuredStartups, onChainStartups]);
+    return onChainStartups;
+  }, [onChainStartups]);
 
-  // Get featured markets to match with mock startups
-  const featuredMarkets = useMemo(() => getFeaturedMarkets(), []);
-
-  // Map markets and aggregate by startupId (including mock markets for mock startups)
+  // Map markets and aggregate by startupId
   const marketsByStartup = useMemo(() => {
     const map: Record<number, Array<{ id: number; market: Market; metadata: MarketMetadata }>> = {};
-    
-    // Add featured markets to mock startups based on startupName
-    featuredMarkets.forEach(({ id, market, metadata }) => {
-      if (metadata.startupName) {
-        const mockStartup = featuredStartups.find((s) => s.startup.name === metadata.startupName);
-        if (mockStartup) {
-          if (!map[mockStartup.id]) {
-            map[mockStartup.id] = [];
-          }
-          map[mockStartup.id].push({ id, market, metadata });
-        }
-      }
-    });
     
     // Add on-chain markets
     if (marketsData) {
@@ -158,8 +134,7 @@ export default function Startups() {
           }
           
           const startupId = Number(market.startupId);
-          if (startupId > 0 && startupId < 1000) {
-            // Only on-chain startups (IDs < 1000)
+          if (startupId > 0) {
             if (!map[startupId]) {
               map[startupId] = [];
             }
@@ -170,7 +145,7 @@ export default function Startups() {
     }
 
     return map;
-  }, [marketsData, featuredMarkets, featuredStartups]);
+  }, [marketsData]);
 
   // Combine startup data with market stats
   const startupsList: StartupData[] = useMemo(() => {

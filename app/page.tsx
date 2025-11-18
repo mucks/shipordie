@@ -10,7 +10,6 @@ import { useMemo } from 'react';
 import { useReadContract, useReadContracts } from 'wagmi';
 import { MILESTONE_PREDICTION_ADDRESS, MILESTONE_PREDICTION_ABI } from '@/lib/web3/contracts';
 import { Market, MarketMetadata } from '@/lib/types';
-import { getFeaturedMarkets } from '@/lib/mockData';
 
 interface MarketWithId {
   id: number;
@@ -46,8 +45,6 @@ export default function Home() {
     },
   });
 
-  const featuredMarkets = useMemo(() => getFeaturedMarkets(), []);
-
   const onChainMarkets: MarketWithId[] = useMemo(() => {
     if (!marketsData) return [];
     return marketsData
@@ -78,8 +75,8 @@ export default function Home() {
   }, [marketsData]);
 
   const allMarkets = useMemo(() => {
-    return [...featuredMarkets, ...onChainMarkets].slice(0, 3);
-  }, [featuredMarkets, onChainMarkets]);
+    return onChainMarkets.slice(0, 3);
+  }, [onChainMarkets]);
 
   return (
     <div className="min-h-screen flex flex-col">
