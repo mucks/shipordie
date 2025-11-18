@@ -17,6 +17,8 @@ export function getWagmiConfig() {
       [bscTestnet.id]: http(),
       [bsc.id]: http(),
     },
+    // Default to BSC Testnet for both local and production
+    // This ensures consistency when the wallet first connects
   });
 }
 

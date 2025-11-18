@@ -23,6 +23,7 @@ export const wagmiAdapter = new WagmiAdapter({
   ssr: true,
   projectId,
   networks,
+  defaultNetwork: bscTestnet, // Default to BSC Testnet for both local and production
   transports: {
     [bscTestnet.id]: http(),
     [bsc.id]: http(),
