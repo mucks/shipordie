@@ -1,4 +1,4 @@
-# ProofMarket 📊
+# Ship or Die 📊
 
 **Prediction Markets for Startup Milestones**
 
@@ -10,15 +10,43 @@ A decentralized platform where founders create transparent prediction markets fo
 
 ## 🎯 Overview
 
-ProofMarket turns startup execution into transparent, verifiable markets. Founders stake tokens on their milestones, while investors and community members bet YES or NO on whether these milestones will be achieved.
+Ship or Die turns startup execution into transparent, verifiable prediction markets. Founders stake tokens on their milestones, while investors and community members bet YES or NO on whether these milestones will be achieved.
 
-### Key Features
+## 🔑 Key Features
 
 - 🎪 **Binary Prediction Markets** - YES/NO betting on milestone completion
 - 💰 **Skin in the Game** - Founders must stake BNB to create markets
-- 🏆 **Winner Takes All** - Proportional rewards from total pool
-- 🔒 **On-Chain Resolution** - Transparent oracle-based outcome determination
+- 🏆 **Winner Takes All** - Proportional rewards from the total pool
+- 🔒 **On-Chain Resolution** - Transparent, oracle-based outcome determination
 - ⚡ **Built on BNB Chain** - Fast, low-cost transactions
+
+## ❗ Why This Matters
+
+Startup performance is often:
+- **private**
+- **unclear**
+- **delayed**
+- **exaggerated**
+
+Investors rely on promises, not proof.
+Ship or Die brings **accountability, public verification, and real economic incentives into the execution layer of startups**.
+
+## 💰 Revenue Model
+Ship or Die supports long-term sustainability through:
+- **PRO subscription for investors & teams** 
+- **Paid verified startup markets** 
+- **Low protocol fees on each settlement** 
+- **Optional enterprise dashboards for accelerators/VCs** 
+
+**PRO/Premium Features** (Coming Soon)
+- Ship or Die will introduce a **PRO subscription** offering:
+- **Advanced analytics** (confidence models, execution scores)
+- **Verified startup markets** (GitHub/Notion integrations)
+- **VC-grade dashboards**
+- **Higher betting limits**
+- **Custom portfolio alerts**
+- **Early access to high-value markets**
+- Users can join the **PRO waitlist** directly on the site.
 
 ## 🚀 Quick Start
 
@@ -200,11 +228,19 @@ See [contracts/MilestonePrediction.sol](./contracts/MilestonePrediction.sol) for
 - ✅ Basic UI with RainbowKit
 
 ### Phase 2
-- [ ] IPFS metadata storage
-- [ ] The Graph indexing
-- [ ] GitHub milestone verification
-- [ ] Reputation NFTs
-- [ ] Market categories
+
+- [ ] IPFS metadata storage  
+- [ ] The Graph indexing  
+- [ ] GitHub milestone verification  
+- [ ] Reputation NFTs  
+- [ ] Market categories  
+  - [ ] Private / unlisted markets  
+  - [ ] Verified Startup Badges (paid)  
+
+### Pro / Premium Features (Coming Soon)
+- [ ] Advanced analytics (confidence models, execution scores)  
+- [ ] Founder reputation profiles  
+- [ ] Watchlist alerts & notifications  
 
 ### Phase 3
 - [ ] Multi-oracle consensus
@@ -212,6 +248,9 @@ See [contracts/MilestonePrediction.sol](./contracts/MilestonePrediction.sol) for
 - [ ] VC dashboards
 - [ ] AI credibility scoring
 - [ ] Notion integration
+
+### Phase 4 
+- [ ] AI + Automation
 
 ## ⚠️ Security Notice
 
@@ -227,6 +266,19 @@ This is an MVP for demonstration purposes. Before production deployment:
 ## 📄 License
 
 MIT
+
+## 👥 Team
+- **Lana Shevchenko** — Product Lead & Growth Strategist
+Tech entrepreneur and founder of several startups, acting as a bridge between Startups × VCs and driving strategic partnerships across Web3 & AI ecosystems.
+Fractional CMO with 18+ years of experience building ventures.
+Specializes in product design, narrative, user experience, and go-to-market strategy.
+Passionate about turning complex concepts into clean, scalable products.
+
+- **Mucks** — Lead Engineer & Smart Contract Developer
+Full-stack engineer with deep experience in blockchain development, and on-chain tooling.
+Built multiple crypto dApps, automation tools, and smart contract architectures.
+Prioritizes fast iteration, high performance, and security-first engineering.
+
 
 ## 🤝 Contributing
 
@@ -246,4 +298,4 @@ Contributions welcome! Please:
 
 **Built fast. Iterate faster.** 🚀
 
-*ProofMarket - Where execution meets accountability*
+*Ship or Die - Where execution meets accountability*
